@@ -1,41 +1,10 @@
-# .
+# Blog Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Ini adalah proyek frontend untuk aplikasi blog. Proyek ini dibuat menggunakan MEVN (mongoDB, ExpressJS, VueJS, NodeJS) untuk membangun antarmuka pengguna yang responsif dan dinamis.
 
-## Recommended IDE Setup
+## Fitur
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+- Menampilkan daftar postingan blog
+- Panel admin manajemen postingan
+- Membaca detail postingan
+- Responsif untuk perangkat mobile dan desktop
