@@ -153,6 +153,7 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import { useToast } from 'vue-toastification' // Impor useToast
 
 export default {
   name: 'PostForm',
@@ -161,6 +162,15 @@ export default {
       type: String,
       required: false,
     },
+  },
+  setup() {
+    // Mengambil instance toast menggunakan useToast() hook
+    // Penting: Hapus panggilan toast("I'm a toast!") dan toast.success('My toast content', { timeout: 2000 }) di sini,
+    // karena ini akan memicu toast setiap kali komponen di-setup.
+    const toast = useToast()
+
+    // Mengembalikan instance toast agar dapat diakses oleh Options API (data, methods, computed)
+    return { toast }
   },
   data() {
     return {
@@ -211,7 +221,7 @@ export default {
     ...mapActions('categories', ['fetchCategories']),
 
     handleFileChange(event) {
-      const file = event.target.files[0]
+      const file = event.target.files?.[0]
       if (file) {
         this.selectedFile = file
         this.imagePreviewUrl = URL.createObjectURL(file)
@@ -236,7 +246,8 @@ export default {
 
     async submitPost() {
       if (!this.post.title.trim() || !this.post.content.trim() || !this.post.category) {
-        alert('Judul, konten, dan kategori wajib diisi.') // Kembali ke alert()
+        // Menggunakan this.toast (tanpa $) karena dikembalikan dari setup()
+        this.toast.error('Judul, konten, dan kategori wajib diisi.')
         return
       }
 
@@ -250,18 +261,21 @@ export default {
 
         if (this.isEditing) {
           await this.updatePost({ id: this.id, postData: this.post })
-          alert('Postingan berhasil diperbarui!') // Kembali ke alert()
+          // Menggunakan this.toast (tanpa $)
+          this.toast.success('Postingan berhasil diperbarui!')
         } else {
           await this.createPost(this.post)
-          alert('Postingan berhasil dibuat!') // Kembali ke alert()
+          // Menggunakan this.toast (tanpa $)
+          this.toast.success('Postingan berhasil dibuat!')
         }
 
         this.$router.push('/admin/posts')
       } catch (error) {
         console.error('Error saving post:', error)
-        alert(
+        // Menggunakan this.toast (tanpa $)
+        this.toast.error(
           'Gagal menyimpan postingan: ' + (this.postsError || 'Terjadi kesalahan tidak dikenal.'),
-        ) // Kembali ke alert()
+        )
       }
     },
   },

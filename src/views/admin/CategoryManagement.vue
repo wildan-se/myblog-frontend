@@ -101,108 +101,99 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex' // Mengimpor helper `mapActions` dan `mapGetters` dari Vuex.
-// Ini memudahkan pemetaan actions dan getters dari Vuex store ke properti/metode komponen.
+import { mapActions, mapGetters } from 'vuex'
+import { useToast } from 'vue-toastification' // Impor useToast
 
 export default {
-  name: 'CategoryManagement', // Nama komponen Vue. Berguna untuk debugging di Vue Devtools.
-
+  name: 'CategoryManagement',
+  // Menggunakan setup() hook untuk mendapatkan instance toast
+  setup() {
+    const toast = useToast()
+    return { toast } // Mengembalikan instance toast agar dapat diakses oleh Options API
+  },
   data() {
-    // Fungsi `data()` mengembalikan objek yang berisi state reaktif komponen.
-    // Properti di sini akan dapat diakses di template dan akan memicu render ulang saat nilainya berubah.
     return {
-      newCategoryName: '', // Menyimpan nilai input untuk kategori baru.
-      editingCategoryId: null, // Menyimpan `_id` dari kategori yang sedang dalam mode edit. `null` berarti tidak ada yang sedang diedit.
-      editingCategoryName: '', // Menyimpan nama kategori saat ini yang sedang diedit.
+      newCategoryName: '',
+      editingCategoryId: null,
+      editingCategoryName: '',
     }
   },
-
   computed: {
-    // Objek `computed` mendefinisikan properti yang dihitung secara reaktif.
-    // Nilainya di-cache berdasarkan dependensinya dan hanya dihitung ulang jika dependensi berubah.
     ...mapGetters('categories', ['allCategories', 'categoriesLoading', 'categoriesError']),
-    // `...mapGetters('categories', [...])`:
-    //   - Memetakan getters dari modul Vuex 'categories' ke properti computed komponen ini.
-    //   - `allCategories`: Mengakses daftar kategori dari Vuex store.
-    //   - `categoriesLoading`: Mengakses status loading dari Vuex store.
-    //   - `categoriesError`: Mengakses pesan error dari Vuex store.
   },
-
   created() {
-    // `created()` adalah lifecycle hook yang dipanggil setelah instance komponen dibuat
-    // dan properti `data` serta `computed` telah diinisialisasi, tetapi DOM belum dirender.
-    this.fetchCategories() // Memanggil aksi Vuex `fetchCategories` untuk memuat data kategori saat komponen dibuat.
+    this.fetchCategories()
   },
-
   methods: {
-    // Objek `methods` mendefinisikan fungsi-fungsi yang dapat dipanggil dari template atau dari dalam komponen.
     ...mapActions('categories', [
-      'fetchCategories', // Memetakan aksi Vuex `fetchCategories` ke metode komponen.
-      'createCategory', // Memetakan aksi Vuex `createCategory`.
-      'updateCategory', // Memetakan aksi Vuex `updateCategory`.
-      'deleteCategory', // Memetakan aksi Vuex `deleteCategory`.
+      'fetchCategories',
+      'createCategory',
+      'updateCategory',
+      'deleteCategory',
     ]),
 
     // Metode untuk menambahkan kategori baru
     async addCategory() {
-      if (!this.newCategoryName.trim()) return // Validasi: Jika nama kosong setelah di-trim, keluar dari fungsi.
+      if (!this.newCategoryName.trim()) {
+        this.toast.error('Nama kategori tidak boleh kosong.') // Menggunakan this.toast.error
+        return
+      }
       try {
-        await this.createCategory(this.newCategoryName) // Memanggil aksi Vuex `createCategory` dengan nama kategori baru.
-        this.newCategoryName = '' // Mengosongkan input setelah berhasil.
-        // Tidak perlu refetch, karena mutasi Vuex sudah menangani reaktivitas (menambahkan kategori baru ke state).
+        await this.createCategory(this.newCategoryName)
+        this.toast.success('Kategori berhasil ditambahkan!') // Menggunakan this.toast.success
+        this.newCategoryName = '' // Mengosongkan input setelah berhasil
       } catch (error) {
-        console.error('Error adding category:', error) // Log error ke konsol.
-        alert('Gagal menambahkan kategori: ' + this.categoriesError) // Memberikan feedback error kepada pengguna melalui alert.
+        console.error('Error adding category:', error) // Log error ke konsol
+        this.toast.error('Gagal menambahkan kategori: ' + this.categoriesError) // Memberikan feedback error kepada pengguna melalui toast
       }
     },
 
     // Metode untuk memulai mode edit untuk kategori tertentu
     startEdit(category) {
-      this.editingCategoryId = category._id // Menyimpan ID kategori yang akan diedit.
-      this.editingCategoryName = category.name // Mengisi input edit dengan nama kategori saat ini.
+      this.editingCategoryId = category._id // Menyimpan ID kategori yang akan diedit
+      this.editingCategoryName = category.name // Mengisi input edit dengan nama kategori saat ini
     },
 
     // Metode untuk membatalkan mode edit
     cancelEdit() {
-      this.editingCategoryId = null // Mereset ID kategori yang diedit (keluar dari mode edit).
-      this.editingCategoryName = '' // Mengosongkan input edit.
+      this.editingCategoryId = null // Mereset ID kategori yang diedit (keluar dari mode edit)
+      this.editingCategoryName = '' // Mengosongkan input edit
     },
 
     // Metode untuk menyimpan perubahan kategori yang diedit
     async saveEdit() {
       if (!this.editingCategoryName.trim() || !this.editingCategoryId) {
-        alert('Nama kategori tidak boleh kosong.') // Validasi: Nama tidak boleh kosong.
+        this.toast.error('Nama kategori tidak boleh kosong.') // Validasi: Nama tidak boleh kosong
         return
       }
       try {
         await this.updateCategory({
-          // Memanggil aksi Vuex `updateCategory`.
-          id: this.editingCategoryId, // Meneruskan ID kategori yang diedit.
-          name: this.editingCategoryName, // Meneruskan nama baru.
+          id: this.editingCategoryId, // Meneruskan ID kategori yang diedit
+          name: this.editingCategoryName, // Meneruskan nama baru
         })
-        alert('Kategori berhasil diperbarui!') // Feedback sukses.
-        this.cancelEdit() // Keluar dari mode edit setelah berhasil.
+        this.toast.success('Kategori berhasil diperbarui!') // Feedback sukses
+        this.cancelEdit() // Keluar dari mode edit setelah berhasil
       } catch (error) {
-        console.error('Error updating category:', error) // Log error.
-        alert('Gagal memperbarui kategori: ' + this.categoriesError) // Feedback error.
+        console.error('Error updating category:', error) // Log error
+        this.toast.error('Gagal memperbarui kategori: ' + this.categoriesError) // Feedback error
       }
     },
 
     // Metode untuk mengkonfirmasi dan menghapus kategori
     async confirmDelete(categoryId) {
-      // Menggunakan `confirm()` bawaan browser untuk konfirmasi.
+      // Menggunakan confirm() bawaan browser untuk konfirmasi aksi yang bersifat destruktif
       if (
         confirm(
           'Apakah Anda yakin ingin menghapus kategori ini? Tindakan ini tidak dapat dibatalkan.',
         )
       ) {
         try {
-          await this.deleteCategory(categoryId) // Memanggil aksi Vuex `deleteCategory`.
-          alert('Kategori berhasil dihapus!') // Feedback sukses.
-          // Tidak perlu refetch, karena mutasi Vuex sudah menangani reaktivitas (menghapus kategori dari state).
+          await this.deleteCategory(categoryId) // Memanggil aksi Vuex `deleteCategory`
+          this.toast.info('Kategori berhasil dihapus!') // Feedback sukses menggunakan toast.info
+          // Tidak perlu refetch, karena mutasi Vuex sudah menangani reaktivitas (menghapus kategori dari state)
         } catch (error) {
-          console.error('Error deleting category:', error) // Log error.
-          alert('Gagal menghapus kategori: ' + this.categoriesError) // Feedback error.
+          console.error('Error deleting category:', error) // Log error
+          this.toast.error('Gagal menghapus kategori: ' + this.categoriesError) // Feedback error
         }
       }
     },

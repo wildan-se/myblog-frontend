@@ -217,10 +217,18 @@
 
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import { useToast } from 'vue-toastification' // Impor useToast
+// Tidak perlu lagi mengimpor ConfirmationToast karena kita tidak menggunakannya untuk confirm()
+// import ConfirmationToast from '@/components/ConfirmationToast.vue';
 
 export default {
   name: 'PostDetailView',
   props: ['slug'],
+  // Menggunakan setup() hook untuk mendapatkan instance toast
+  setup() {
+    const toast = useToast()
+    return { toast } // Mengembalikan instance toast agar dapat diakses oleh Options API
+  },
   data() {
     return {
       newCommentContent: '',
@@ -253,6 +261,7 @@ export default {
 
     async submitComment() {
       if (!this.newCommentContent.trim() || !this.isAuthenticated || !this.postDetail) {
+        this.toast.error('Konten komentar tidak boleh kosong.') // Notifikasi Error
         return
       }
       try {
@@ -261,9 +270,10 @@ export default {
           content: this.newCommentContent,
         })
         this.newCommentContent = '' // Clear the input field
+        this.toast.success('Komentar berhasil ditambahkan!') // Notifikasi Sukses
       } catch (error) {
         console.error('Error submitting comment:', error)
-        // Error message will be displayed via commentsError getter
+        this.toast.error('Gagal mengirim komentar: ' + this.commentsError) // Notifikasi Error
       }
     },
 
@@ -275,16 +285,16 @@ export default {
     cancelEditComment() {
       this.editingCommentId = null
       this.editingCommentContent = ''
-      this.$store.commit('comments/comments_error', null) // Clear any comment-related errors
+      this.$store.commit('comments/comments_error', null)
     },
 
     async saveEditedComment(commentId) {
       if (!this.editingCommentContent.trim()) {
-        alert('Konten komentar tidak boleh kosong.')
+        this.toast.error('Konten komentar tidak boleh kosong.') // Notifikasi Error
         return
       }
       if (!this.postDetail) {
-        alert('Postingan tidak ditemukan.')
+        this.toast.error('Postingan tidak ditemukan.') // Notifikasi Error
         return
       }
 
@@ -294,31 +304,38 @@ export default {
           commentId: commentId,
           content: this.editingCommentContent,
         })
-        alert('Komentar berhasil diperbarui!')
+        this.toast.success('Komentar berhasil diperbarui!') // Notifikasi Sukses
         this.cancelEditComment()
       } catch (error) {
         console.error('Error updating comment:', error)
-        alert('Gagal memperbarui komentar: ' + this.commentsError)
+        this.toast.error('Gagal memperbarui komentar: ' + this.commentsError) // Notifikasi Error
       }
     },
 
+    // Metode untuk mengkonfirmasi dan menghapus komentar
     async confirmDeleteComment(commentId) {
       if (!this.postDetail) {
-        alert('Postingan tidak ditemukan.')
+        this.toast.error('Postingan tidak ditemukan.') // Notifikasi Error
         return
       }
-      if (confirm('Apakah Anda yakin ingin menghapus komentar ini?')) {
+      // Menggunakan `confirm()` bawaan browser untuk konfirmasi.
+      if (
+        confirm(
+          'Apakah Anda yakin ingin menghapus komentar ini? Tindakan ini tidak dapat dibatalkan.',
+        )
+      ) {
         try {
           await this.deleteComment({
             postId: this.postDetail._id,
             commentId: commentId,
           })
-          alert('Komentar berhasil dihapus!')
+          this.toast.info('Komentar berhasil dihapus!') // Notifikasi Info
         } catch (error) {
           console.error('Error deleting comment:', error)
-          alert('Gagal menghapus komentar: ' + this.commentsError)
+          this.toast.error('Gagal menghapus komentar: ' + this.commentsError) // Notifikasi Error
         }
       }
+      // Jika pengguna membatalkan (mengklik "Cancel" di confirm()), tidak ada toast yang muncul.
     },
 
     handleImageError(event) {

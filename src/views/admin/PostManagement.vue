@@ -23,7 +23,7 @@
           class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
         >
           <option value="">Semua Status</option>
-          <!-- PENTING: Value kosong untuk semua status -->
+          <!-- Penting: Value kosong untuk semua status -->
           <option value="published">Diterbitkan</option>
           <option value="draft">Draf</option>
         </select>
@@ -144,65 +144,45 @@
 </template>
 
 <script>
-// 1. Importasi Pustaka dan Helper
 import { mapActions, mapGetters } from 'vuex' // Mengimpor helper `mapActions` dan `mapGetters` dari Vuex.
-// Ini memudahkan pemetaan actions dan getters dari Vuex store ke properti/metode komponen.
 import debounce from 'lodash.debounce' // Mengimpor fungsi `debounce` dari pustaka `lodash.debounce`.
-// Fungsi ini digunakan untuk menunda eksekusi fungsi hingga jeda waktu tertentu berlalu sejak pemanggilan terakhirnya.
+import { useToast } from 'vue-toastification' // Impor useToast
 
 export default {
   name: 'PostManagement', // Nama komponen Vue. Berguna untuk debugging di Vue Devtools.
-
+  // Menggunakan setup() hook untuk mendapatkan instance toast
+  setup() {
+    const toast = useToast()
+    return { toast } // Mengembalikan instance toast agar dapat diakses oleh Options API
+  },
   data() {
     // Fungsi `data()` mengembalikan objek yang berisi state reaktif komponen.
-    // Properti di sini akan dapat diakses di template dan akan memicu render ulang saat nilainya berubah.
     return {
       searchKeyword: '', // Menyimpan nilai input dari kolom pencarian.
-      postStatusFilter: '', // Menyimpan nilai yang dipilih dari dropdown filter status ('', 'published', atau 'draft').
-      // Defaultnya string kosong ('') agar backend mengambil semua status untuk admin.
+      postStatusFilter: '', // Menyimpan nilai yang dipilih dari dropdown filter status.
       currentPage: 1, // Menyimpan nomor halaman saat ini untuk pagination.
     }
   },
 
   computed: {
     // Objek `computed` mendefinisikan properti yang dihitung secara reaktif.
-    // Nilainya di-cache berdasarkan dependensinya dan hanya dihitung ulang jika dependensi berubah.
     ...mapGetters('posts', ['allPosts', 'postsLoading', 'postsError', 'postsPagination']),
-    // `...mapGetters('posts', [...])`:
-    //   - Memetakan getters dari modul Vuex 'posts' ke properti computed komponen ini.
-    //   - `allPosts`: Mengakses daftar postingan dari Vuex store.
-    //   - `postsLoading`: Mengakses status loading dari Vuex store (true saat API request berlangsung).
-    //   - `postsError`: Mengakses pesan error dari Vuex store jika terjadi kesalahan.
-    //   - `postsPagination`: Mengakses objek pagination dari Vuex store (page, pages, count).
   },
 
   created() {
     // `created()` adalah lifecycle hook yang dipanggil setelah instance komponen dibuat
-    // dan properti `data` serta `computed` telah diinisialisasi, tetapi DOM belum dirender.
-    // Ini adalah tempat yang tepat untuk memuat data awal.
     this.fetchPostsWithFilter() // Memanggil metode `fetchPostsWithFilter` untuk memuat data postingan awal.
 
     // Menginisialisasi fungsi `debouncedFetchPosts`.
-    // Ini adalah versi `fetchPostsWithFilter` yang di-debounce.
-    // Ketika `debouncedFetchPosts` dipanggil berulang kali (misal: saat pengguna mengetik di kolom pencarian),
-    // fungsi `fetchPostsWithFilter` yang sebenarnya hanya akan dieksekusi setelah jeda 500ms
-    // tanpa pemanggilan `debouncedFetchPosts` lainnya.
     this.debouncedFetchPosts = debounce(this.fetchPostsWithFilter, 500)
   },
 
   methods: {
     // Objek `methods` mendefinisikan fungsi-fungsi yang dapat dipanggil dari template atau dari dalam komponen.
     ...mapActions('posts', ['fetchPosts', 'deletePost']),
-    // `...mapActions('posts', [...])`:
-    //   - Memetakan actions dari modul Vuex 'posts' ke metode komponen ini.
-    //   - `fetchPosts`: Memetakan aksi untuk mengambil postingan (termasuk filter, pagination).
-    //   - `deletePost`: Memetakan aksi untuk menghapus postingan.
 
     // Metode untuk memuat postingan dengan filter dan pagination saat ini.
     fetchPostsWithFilter() {
-      // Memanggil aksi Vuex `fetchPosts`.
-      // Meneruskan properti `currentPage`, `searchKeyword`, dan `postStatusFilter` sebagai parameter.
-      // Aksi Vuex akan menggunakan parameter ini untuk membangun URL permintaan ke backend.
       this.fetchPosts({
         page: this.currentPage,
         keyword: this.searchKeyword,
@@ -225,13 +205,10 @@ export default {
       if (confirm('Apakah Anda yakin ingin menghapus postingan ini?')) {
         try {
           await this.deletePost(postId) // Memanggil aksi Vuex `deletePost` dengan ID postingan.
-          // `await` menunggu operasi penghapusan selesai.
-          this.fetchPostsWithFilter() // Setelah penghapusan berhasil, memuat ulang daftar postingan
-          // untuk menyegarkan tampilan (karena item sudah dihapus dari database).
-          alert('Postingan berhasil dihapus!') // Memberikan feedback sukses kepada pengguna.
+          this.toast.info('Postingan berhasil dihapus!') // Memberikan feedback sukses menggunakan toast.info
         } catch (error) {
           console.error('Error deleting post:', error) // Log error ke konsol.
-          alert('Gagal menghapus postingan: ' + this.postsError) // Memberikan feedback error kepada pengguna.
+          this.toast.error('Gagal menghapus postingan: ' + this.postsError) // Memberikan feedback error kepada pengguna.
         }
       }
     },
@@ -239,8 +216,6 @@ export default {
 
   watch: {
     // Objek `watch` memungkinkan Anda untuk menjalankan fungsi ketika properti data tertentu berubah.
-    // 'postsPagination.page': Mengamati perubahan pada properti `page` di dalam objek `postsPagination` (dari Vuex getter).
-    // Ini berguna jika pagination diubah dari luar komponen ini atau jika ada state yang perlu disinkronkan.
     'postsPagination.page'(newPage) {
       this.currentPage = newPage // Memperbarui `currentPage` lokal komponen agar selalu sinkron dengan state pagination Vuex.
     },
