@@ -2,14 +2,14 @@
   <div class="p-6 bg-white shadow-md post-management rounded-xl">
     <h2 class="mb-6 text-3xl font-bold text-gray-800">Manajemen Postingan</h2>
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between mb-6">
       <router-link
         to="/admin/posts/new"
-        class="px-6 py-2 font-semibold text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        class="flex px-6 py-2 font-semibold text-white bg-indigo-600 rounded-lg shadow-md text-nowrap hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
       >
         Buat Postingan Baru
       </router-link>
-      <div class="flex space-x-2">
+      <div class="flex flex-wrap lg:space-x-2">
         <input
           type="text"
           v-model="searchKeyword"

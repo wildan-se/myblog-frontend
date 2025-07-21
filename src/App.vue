@@ -108,7 +108,7 @@
       <div
         v-if="isMobileMenuOpen"
         id="mobile-menu"
-        class="fixed inset-0 z-50 flex flex-col items-center justify-center space-y-8 bg-white shadow-lg md:hidden"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center space-y-8 bg-white shadow-lg h-1/3 md:hidden"
       >
         <button
           @click="toggleMobileMenu"
